@@ -1,7 +1,7 @@
 import pygame
 import pygame.locals as pygloc #to tell pygame to use openGL
 import random
-
+import time
 import OpenGL.GL as GL
 import OpenGL.GLU as GLU
 
@@ -53,6 +53,16 @@ shapes = {
   "J4": ((0, 0), (0, 1), (-1, 1), (-2, 1))
 }
 
+shape_colour = {
+    "T": (30/255, 144/255, 1.0), #dodger blue
+    "I": (1.0, 215/255, 0.0), #gold
+    "L": (144/255, 238/255, 144/255), #light green
+    "O": (186/255, 85/255, 211/255), #medium orchid
+    "S": (210/255, 105/255, 30/255), #chocolate
+    "Z": (0.0, 139/255, 139/255), #dark cyan
+    "J": (250/255, 128/255, 114/255) #salmon
+}
+
 def square_form(centre, colour):
     new_vertices = [(vertex[0] + centre[0], 
     vertex[1] + centre[1] , 0) 
@@ -65,7 +75,6 @@ def square_form(centre, colour):
     GL.glEnd()
     
 def draw_shape(shape, centre, colour):
-    print (shape)
     for piece in shape:
         new_piece = (piece[0] + centre[0], 
     piece[1] + centre[1])
@@ -128,7 +137,6 @@ def can_go_right(shape, centre):
 def shape_generator():
     shape_letter = random.choice(list(shapes.keys()))
     shape = shapes[shape_letter]
-    print(shape_letter, shape)
     return shape_letter, shape
 
 def drawText(position, textString):     
@@ -138,10 +146,14 @@ def drawText(position, textString):
     GL.glRasterPos3d(*position)     
     GL.glDrawPixels(textSurface.get_width(), textSurface.get_height(), GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, textData)
 
+score = 0
+
 def line_clear(max_row, occupied):
     for row in range(-14, max_row+1):
         row_pieces = [piece for piece in occupied if piece[1] == row]
         if len(row_pieces) >= 15:
+            global score
+            score += 1
             occupied = [piece for piece in occupied if piece[1] < row] \
             + [(piece[0], piece[1]-1) for piece in occupied if piece[1]>row]
     return occupied
@@ -197,12 +209,12 @@ while not done:
     
     if can_go_down(current_shape, centre):
         if key_pressed [pygame.K_SPACE]: y -= 1/2
-        else: y -= 1/30
-    else:
-        if centre[1]>=16:
+        else: y -= (1+score)/30
+    elif not can_go_down(current_shape, centre) and not game_over:
+        if centre[1]>=15:
             game_over = True
         max_y = add_to_occupied(current_shape, centre)
-        occupied = line_clear(max_y, occupied)
+        occupied = line_clear(max_y, occupied) #i think cos this is called
         current_letter, current_shape = shape_generator()
         x=0
         y=16
@@ -210,16 +222,21 @@ while not done:
     GL.glClear(GL.GL_COLOR_BUFFER_BIT|GL.GL_DEPTH_BUFFER_BIT)
     
     centre = (round(x),y//1) #hard divide jd semacem di round down
-    colour = (0.0, 0.4, 0.75)
-    colour_o = (0.9, 0.0, 0.4)
-    colour_g = (0.2, 0.2, 0.2)
-    grid_form(colour_g)
+    colour = shape_colour[current_letter[0]]
+    colour_over = (0.5, 0.0, 0.0) #maroon
+    colour_grid = (0.2, 0.2, 0.2) #dark grey
+    grid_form(colour_grid)
+    drawText((-7,12,0), "SCORE = " + str(score))
     #square_form(centre, colour)
     
     draw_shape(current_shape, centre, colour)
-    draw_shape(occupied, (0,0), colour_o)
+    draw_shape(occupied, (0,0), colour_over)
 
     if game_over:
         drawText((-4.8,0,0), "GAME OVER")
+        if key_pressed [pygame.K_SPACE]:
+            done=True
     pygame.display.flip()
     game_clock.tick(60)
+
+    #the score keeps adding up
