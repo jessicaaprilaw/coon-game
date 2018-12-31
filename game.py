@@ -4,7 +4,7 @@ import random
 import time
 import OpenGL.GL as GL
 import OpenGL.GLU as GLU
-
+ 
 display=(405, 800)
 def display_ratio():
     return display[0]/display[1]
@@ -220,22 +220,20 @@ while not done: #as long as the game is not done
 
     GL.glClear(GL.GL_COLOR_BUFFER_BIT|GL.GL_DEPTH_BUFFER_BIT)
     
-    centre = (round(x),y//1) #hard divide jd semacem di round down
+    centre = (round(x),y//1) #hard divide similar to round down
     colour = shape_colour[current_letter[0]]
     colour_over = (0.5, 0.0, 0.0) #maroon
     colour_grid = (0.2, 0.2, 0.2) #dark grey
     grid_form(colour_grid)
     drawText2((-7,13,0), "SCORE = " + str(score))
-    #square_form(centre, colour)
     
     draw_shape(current_shape, centre, colour)
     draw_shape(occupied, (0,0), colour_over)
 
     if game_over:
         drawText((-4.8,0,0), "GAME OVER")
+        drawText2((-5, -1, 0), "Press space to quit")
         if key_pressed [pygame.K_SPACE]:
             done=True
     pygame.display.flip()
     game_clock.tick(60)
-
-    #the score keeps adding up
