@@ -146,6 +146,13 @@ def drawText(position, textString):
     GL.glRasterPos3d(*position)     
     GL.glDrawPixels(textSurface.get_width(), textSurface.get_height(), GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, textData)
 
+def drawText2(position, textString):     
+    font = pygame.font.Font (None, 44)
+    textSurface = font.render(textString, True, (255,255,255,255), (0,0,0,255))     
+    textData = pygame.image.tostring(textSurface, "RGBA", True)     
+    GL.glRasterPos3d(*position)     
+    GL.glDrawPixels(textSurface.get_width(), textSurface.get_height(), GL.GL_RGBA, GL.GL_UNSIGNED_BYTE, textData)
+
 score = 0
 
 def line_clear(max_row, occupied):
@@ -155,7 +162,7 @@ def line_clear(max_row, occupied):
             global score
             score += 1
             occupied = [piece for piece in occupied if piece[1] < row] \
-            + [(piece[0], piece[1]-1) for piece in occupied if piece[1]>row]
+            + [(piece[0], piece[1]-1) for piece in occupied if piece[1]>row] #moving the piece downwards?
     return occupied
 
 def rotate(current_letter):
@@ -188,33 +195,36 @@ current_letter, current_shape = shape_generator()
 centre = (x, y)
 game_over = False
 
-while not done:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
+while not done: #as long as the game is not done
+    for event in pygame.event.get(): #checking event happening
+        if event.type == pygame.QUIT: #quitting
             done = True
             pygame.quit()
-        if event.type == pygame.KEYDOWN:
+        if event.type == pygame.KEYDOWN: #key is pressed, need not let go, one tap
             if event.key == pygame.K_LEFT and can_go_left(current_shape, centre):
                 x -= 1
-                x = round(x)
+                x = round(x) #to remove the decimals
             if event.key == pygame.K_RIGHT and can_go_right(current_shape, centre):
                 x += 1
                 x = round(x)
-            if event.key == pygame.K_UP:
+            if event.key == pygame.K_UP: #rotating the shape
                 current_letter, current_shape = rotate(current_letter)
 
-    key_pressed = pygame.key.get_pressed()
-    if key_pressed [pygame.K_LEFT] and can_go_left(current_shape, centre): x-=1/15
-    if key_pressed [pygame.K_RIGHT] and can_go_right(current_shape, centre): x+=1/15
+    key_pressed = pygame.key.get_pressed() #the key is held, make the variable key_pressed, to get the pressed key below.
+    if key_pressed [pygame.K_LEFT] and can_go_left(current_shape, centre): 
+        x-=1/15
+    if key_pressed [pygame.K_RIGHT] and can_go_right(current_shape, centre): 
+        x+=1/15
     
-    if can_go_down(current_shape, centre):
+    if can_go_down(current_shape, centre) and not game_over: #checking whether block can go down
         if key_pressed [pygame.K_SPACE]: y -= 1/2
         else: y -= (1+score)/30
     elif not can_go_down(current_shape, centre) and not game_over:
         if centre[1]>=15:
             game_over = True
         max_y = add_to_occupied(current_shape, centre)
-        occupied = line_clear(max_y, occupied) #i think cos this is called
+        for x in range (0, 22):
+            occupied = line_clear(max_y, occupied) #i think cos this is called
         current_letter, current_shape = shape_generator()
         x=0
         y=16
@@ -226,7 +236,7 @@ while not done:
     colour_over = (0.5, 0.0, 0.0) #maroon
     colour_grid = (0.2, 0.2, 0.2) #dark grey
     grid_form(colour_grid)
-    drawText((-7,12,0), "SCORE = " + str(score))
+    drawText2((-7,13,0), "SCORE = " + str(score))
     #square_form(centre, colour)
     
     draw_shape(current_shape, centre, colour)
