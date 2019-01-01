@@ -157,7 +157,9 @@ def drawText2(position, textString):
 score = 0
 
 def line_clear(max_row, occupied):
-    for row in range(-14, max_row+1):
+    # -15 is used because range doesnt include
+    # the latter range (if use -14 then row -14 will be excluded)
+    for row in range(max_row, -15, -1): # checking from top to bottom
         row_pieces = [piece for piece in occupied if piece[1] == row]
         if len(row_pieces) >= 15:
             global score
@@ -212,8 +214,7 @@ while not done: #as long as the game is not done
         if centre[1]>=15:
             game_over = True
         max_y = add_to_occupied(current_shape, centre)
-        for x in range (0, 22):
-            occupied = line_clear(max_y, occupied) #i think cos this is called
+        occupied = line_clear(max_y, occupied)
         current_letter, current_shape = shape_generator()
         x=0
         y=16
