@@ -14,10 +14,6 @@ screen = pygame.display.set_mode(display , pygloc.DOUBLEBUF | pygloc.OPENGL)
 done = False
 game_clock = pygame.time.Clock()
 
-square_vertices = ((0.5, 0.5) , (-0.5, 0.5) , (-0.5, -0.5) , (0.5, -0.5))
-
-x=0
-y=16
 
 def grid_form(colour):
     GL.glBegin(GL.GL_LINES)
@@ -31,7 +27,23 @@ def grid_form(colour):
         GL.glVertex3fv((11, y-0.5, 0))
     GL.glEnd()
 
-#coordinates of the shape
+x = 0
+y = 16
+centre = (x, y) #to make sure it's spawned in the topmost middle of the window
+
+square_vertices = ((0.5, 0.5) , (-0.5, 0.5) , (-0.5, -0.5) , (0.5, -0.5))
+
+def square_form(centre, colour):
+    new_vertices = [(vertex[0] + centre[0], vertex[1] + centre[1] , 0) 
+    for vertex in square_vertices]
+
+    GL.glBegin(GL.GL_QUADS)
+    GL.glColor3fv(colour)
+    for v in new_vertices:
+        GL.glVertex3fv(v)
+    GL.glEnd()
+
+#coordinates of the centre point of shape
 shapes = {
   "T1": ((-1, 1), (0, 1), (1, 1), (0, 0)), 
   "T2": ((0, 0), (0, 1), (0, 2), (-1, 1)),
@@ -63,17 +75,6 @@ shape_colour = {
     "Z": (0.0, 139/255, 139/255), #dark cyan
     "J": (250/255, 128/255, 114/255) #salmon
 }
-
-def square_form(centre, colour):
-    new_vertices = [(vertex[0] + centre[0], 
-    vertex[1] + centre[1] , 0) 
-    for vertex in square_vertices]
-
-    GL.glBegin(GL.GL_QUADS)
-    GL.glColor3fv(colour)
-    for v in new_vertices:
-        GL.glVertex3fv(v)
-    GL.glEnd()
     
 def draw_shape(shape, centre, colour):
     for piece in shape:
@@ -96,15 +97,15 @@ def can_go_down(shape, centre):
     return True
 
 def add_to_occupied(shape, centre):
-    max_y = None
+    shape_max_y = None
     for piece in shape:
         new_piece = (piece[0] + centre[0], piece[1] + centre[1])
         occupied.append(new_piece)
-        if max_y is None:
-            max_y = new_piece[1]
+        if shape_max_y is None:
+            shape_max_y = new_piece[1] #ini max_y dr piece yang paling baru instead of really max_y
         elif new_piece[1]>max_y:
-            max_y=new_piece[1]
-    return int(max_y)
+            shape_max_y=new_piece[1]
+    return int(shape_max_y)
         
     
 def can_go_left(shape, centre):
@@ -183,7 +184,7 @@ def rotate(current_letter):
     return next_letter, next_shape
 
 current_letter, current_shape = shape_generator()
-centre = (x, y)
+
 game_over = False
 
 while not done: #as long as the game is not done
@@ -211,9 +212,10 @@ while not done: #as long as the game is not done
         if key_pressed [pygame.K_SPACE]: y -= 1/2
         else: y -= (1+score)/30
     elif not can_go_down(current_shape, centre) and not game_over:
-        if centre[1]>=15:
+        max_y = -15 #the lowest point -1
+        max_y = max(add_to_occupied(current_shape, centre), max_y)
+        if max_y>=14:
             game_over = True
-        max_y = add_to_occupied(current_shape, centre)
         occupied = line_clear(max_y, occupied)
         current_letter, current_shape = shape_generator()
         x=0
